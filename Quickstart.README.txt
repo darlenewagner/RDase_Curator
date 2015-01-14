@@ -1,0 +1,65 @@
+### Retreival and Curation of Corrinoid-dependent Reductive Dehalogenases
+
+## Prerequisites:  local installation of hmmer version 3.0 or higher
+##                 local installation of Perl (BioPerl optional)
+
+# 1: Run hmmsearch against local, fasta-formatted NCBI nr or refseq database
+
+
+# 2: Extract accession IDs from hmmsearch output where accessions represent non-redundant source genomes or distinct isolates.
+#    Note that proteins with identical sequences may be retreived, provided they are encoded in separate genomes/isolates.
+
+
+# 3: Use accession IDs to retrieve protein sequences in fasta format.
+
+
+
+# 4: Run hmmsearch against retreived protein sequences.
+
+hmmer_3.0-3/usr/bin/hmmsearch -o RDase_16seqHMM_retreivals/Dehalogenase_v_Jan2015_NovelAcc.hmmsearch.txt --acc --notextw HMMs_for_RDase_annot/pfam13486_89seq.hmm RDase_16seqHMM_retreivals/fasta_Jan2015_NovelProteins.faa.txt
+
+hmmer_3.0-3/usr/bin/hmmsearch -o RDase_16seqHMM_retreivals/QueG_v_Jan2015_NovelAcc.hmmsearch.txt --acc --notextw HMMs_for_RDase_annot/QueG_22seq.hmm RDase_16seqHMM_retreivals/fasta_Jan2015_NovelProteins.faa.txt
+
+hmmer_3.0-3/usr/bin/hmmsearch -o RDase_16seqHMM_retreivals/Polyferr_v_Jan2015_NovelAcc.hmmsearch.txt --acc --notextw HMMs_for_RDase_annot/Archaeal_Polyferr_8_FeS.hmm RDase_16seqHMM_retreivals/fasta_Jan2015_NovelProteins.faa.txt
+
+hmmer_3.0-3/usr/bin/hmmsearch -o RDase_16seqHMM_retreivals/Acetogen_Methanogen_v_Jan2015_NovelAcc.hmmsearch.txt --acc --notextw HMMs_for_RDase_annot/Unchar_aceto_methano_10seq.hmm RDase_16seqHMM_retreivals/fasta_Jan2015_NovelProteins.faa.txt 
+
+### Note, if HMM for a stockholm alignment does not yet exist:
+    hmmer_3.0-3/usr/bin/hmmbuild --informat stockholm  HMMs_for_RDase_annot/pfam13486_89seq.hmm HMMs_for_RDase_annot/pfam13486_89seq.stoc.txt
+
+# 5: Create tab-delimited files from output of the four curation HMMs
+
+perl RDase_16seqHMM_retreivals/Dehalogenase_hmmsearch_infoseek.pl RDase_16seqHMM_retreivals/Dehalogenase_v_Jan2015_NovelAcc.hmmsearch.txt RDase_16seqHMM_retreivals/Jan2015_NovelAccesions.txt >> RDase_16seqHMM_retreivals/Tabbed_curation_files/pfam13486_in_Jan2015_Novel_HMMhits.tab.txt
+
+perl RDase_16seqHMM_retreivals/QueG_Corrin_hmmsearch_infoseek.pl RDase_16seqHMM_retreivals/QueG_v_Jan2015_NovelAcc.hmmsearch.txt RDase_16seqHMM_retreivals/Jan2015_NovelAccesions.txt >> RDase_16seqHMM_retreivals/Tabbed_curation_files/QueG_in_Jan2015_Novel_HMMhits.tab.txt
+
+perl RDase_16seqHMM_retreivals/Domain_hmmsearch_infoseek.pl RDase_16seqHMM_retreivals/Polyferr_v_Jan2015_NovelAcc.hmmsearch.txt RDase_16seqHMM_retreivals/Jan2015_NovelAccesions.txt > RDase_16seqHMM_retreivals/Tabbed_curation_files/Polyferr_Novel_HMMhits.tab.txt
+
+perl RDase_16seqHMM_retreivals/Unchar_FeS_hmmsearch_infoseek.pl RDase_16seqHMM_retreivals/Acetogen_Methanogen_v_Jan2015_NovelAcc.hmmsearch.txt RDase_16seqHMM_retreivals/Jan2015_NovelAccesions.txt > RDase_16seqHMM_retreivals/Tabbed_curation_files/Acetogen_Methanogen_Novel_HMMhits.tab.txt
+
+# 6: Export each *.tab.txt file into Excel and organize into a single .csv spreadsheet where the first four records (protein accesions) have the following format:
+ head -5 RDase_v_nonRDase_Scores_Jan2015.csv 
+GenBank/RefSeq ID,RDase_Superfamily,PFAM_dehalogenase,Acetogen_Methanogen_Fe-S,QueG_Corrin_Fe-S,Polyferredoxin
+CDX02974.1,563.8,89.7,64.7,54.5,12.4
+AIR72275.1,342.6,293.7,39,29.8,10.3
+AIR72277.1,342,292.5,39,29.8,10.3
+KHA51166.1,338.3,31.2,33.9,20.8,24.3
+
+## Note: it is imporatant that column header names contain no spaces nor digits
+
+# 7:  Create folder 'Protein_Partition' in which retreived protein fasta sequences will be written to separate files according to curation
+
+perl clean_prot_fasta.pl < fasta_Jan2015_NovelProteins.faa.txt > cleanFasta_Jan2015_NovelProteins.faa.txt ## remove whitespace from amino acid sequences
+
+mkdir Protein_Partition
+
+perl Assign_RDase_Membership_from_BitScore_CSV.pl RDase_16seq_against_2015nr.hmmsearch.txt cleanFasta_Jan2015_NovelProteins.faa.txt 
+
+## Result (assuming no PFAM_dehalogenase and Polyferredoxin are empty sets)
+
+Protein_Partition/
+├── Acetogen_Methanogen_related_FeS.txt
+├── QueG_related.txt
+└── RDase_retreived_by_main_HMM.txt
+
+
