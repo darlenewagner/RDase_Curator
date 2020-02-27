@@ -91,7 +91,7 @@ for key in sorted(fastaDict.keys()):
     fh.close()
     open('query.faa', 'r')
     if(args.blastout == 'xml'): ## Return top five blastp hits, --identity user threshold not used
-        blastHit = os.popen("blastp -db {} -query {} -outfmt 5 -max_target_seqs 5 -evalue 0.05".format(database, fh.name)).read()
+        blastHit = os.popen("blastp -db {} -query {} -outfmt 5 -max_target_seqs 5 -evalue 0.1".format(database, fh.name)).read()
         xmlTree = ET.fromstring(blastHit)  ## Constructor for xml.etree.ElementTree
         #print(xmlTree.tag, xmlTree.attrib) # info for root of xmlTree
         #for child in xmlTree:
@@ -99,8 +99,11 @@ for key in sorted(fastaDict.keys()):
         print(xmlTree[5].text + "\t", end="") ## display <BlastOutput_query-def>
         for hits in xmlTree[8][0][4]:         ## iterate through elements of <Iteration_hits>
             print(hits.find('Hit_def').text + "\t", end="")
+            evalues = 0
             for stats in hits.find('Hit_hsps'):  ## iterate through elements of <Hit_hsps>
-                print(stats.find('Hsp_evalue').text + "\t", end="")
+                if(evalues == 0):
+                    print(stats.find('Hsp_evalue').text + "\t", end="")
+                evalues = evalues + 1
         print()
     else:  ## Return single top blasp hit only
         blastHit = os.popen("blastp -db {} -query {} -outfmt 6 -max_target_seqs 1 -evalue 0.05".format(database, fh.name)).read()
